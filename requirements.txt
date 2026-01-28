@@ -1,0 +1,29 @@
+# Backend
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+
+# Auth & Security
+python-jose
+passlib[bcrypt]
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+# Agentic AI
+langchain
+langgraph
+langchain-community
+
+# LLM (Groq)
+groq
+
+# RAG & Embeddings
+sentence-transformers
+qdrant-client
+
+# Utilities
+httpx
+python-multipart
