@@ -4,21 +4,22 @@ from app.api.auth import router as auth_router
 from app.api.tickets import router as ticket_router
 from app.core.init_kb import initialize_knowledge_base
 from contextlib import asynccontextmanager
+from app.core.logger import app_logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup"""
-    print("🚀 Starting Agentic Support AI...")
+    app_logger.info("🚀 Starting Agentic Support AI...")
     
     # Initialize knowledge base with support documents
-    print("📚 Initializing knowledge base...")
+    app_logger.info("📚 Initializing knowledge base...")
     initialize_knowledge_base()
     
-    print("✅ System ready!")
+    app_logger.info("✅ System ready!")
     yield
     
     # Cleanup on shutdown
-    print("👋 Shutting down...")
+    app_logger.info("👋 Shutting down...")
 
 app = FastAPI(
     title="Agentic Support AI",

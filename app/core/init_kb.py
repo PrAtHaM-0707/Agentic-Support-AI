@@ -68,20 +68,22 @@ SUPPORT_DOCUMENTS = [
 ]
 
 
+from app.core.logger import app_logger
+
 def initialize_knowledge_base():
     """Load support documents into vector database"""
-    print("Initializing knowledge base...")
+    app_logger.info("Initializing knowledge base...")
     
     try:
         count = add_documents(SUPPORT_DOCUMENTS)
         stats = get_collection_stats()
         
-        print(f"Successfully added {count} documents to knowledge base")
-        print(f"Total documents in collection: {stats['total_documents']}")
+        app_logger.info(f"Successfully added {count} documents to knowledge base")
+        app_logger.info(f"Total documents in collection: {stats['total_documents']}")
         
         return True
     except Exception as e:
-        print(f"Error initializing knowledge base: {e}")
+        app_logger.error(f"Error initializing knowledge base: {e}")
         return False
 
 

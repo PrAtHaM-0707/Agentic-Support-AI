@@ -6,6 +6,7 @@ from app.models.ticket import Ticket
 from app.schemas.ticket import TicketCreate
 from app.core.deps import get_current_user
 from app.graphs.ticket_flow import ticket_graph
+from app.core.logger import app_logger
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -30,7 +31,7 @@ async def process_ticket_async(ticket_id: int, content: str, db: Session):
             
             db.commit()
     except Exception as e:
-        print(f"Error processing ticket {ticket_id}: {e}")
+        app_logger.error(f"Error processing ticket {ticket_id}: {e}")
 
 
 @router.post("/")
