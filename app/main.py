@@ -6,20 +6,22 @@ from app.core.init_kb import initialize_knowledge_base
 from contextlib import asynccontextmanager
 from app.core.logger import app_logger
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup"""
     app_logger.info("🚀 Starting Agentic Support AI...")
-    
+
     # Initialize knowledge base with support documents
     app_logger.info("📚 Initializing knowledge base...")
     initialize_knowledge_base()
-    
+
     app_logger.info("✅ System ready!")
     yield
-    
+
     # Cleanup on shutdown
     app_logger.info("👋 Shutting down...")
+
 
 app = FastAPI(
     title="Agentic Support AI",
@@ -33,7 +35,7 @@ app = FastAPI(
     - LangChain integration for memory and chains
     """,
     version="2.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware for frontend integration
@@ -48,6 +50,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(ticket_router)
 
+
 @app.get("/")
 def health():
     return {
@@ -60,19 +63,20 @@ def health():
             "planning",
             "self_correction",
             "evaluation_pipeline",
-            "guardrails"
-        ]
+            "guardrails",
+        ],
     }
+
 
 @app.get("/system/info")
 def system_info():
     """Get system capabilities and statistics"""
     from app.core.qdrant_client import get_collection_stats
     from app.core.tools import get_tool_definitions
-    
+
     kb_stats = get_collection_stats()
     tools = get_tool_definitions()
-    
+
     return {
         "knowledge_base": kb_stats,
         "available_tools": [t["function"]["name"] for t in tools],
@@ -83,7 +87,7 @@ def system_info():
             "decision",
             "responder",
             "supervisor",
-            "evaluator"
+            "evaluator",
         ],
         "features": {
             "rag": True,
@@ -93,6 +97,6 @@ def system_info():
             "evaluation": True,
             "guardrails": True,
             "async_processing": True,
-            "langchain_integration": True
-        }
+            "langchain_integration": True,
+        },
     }

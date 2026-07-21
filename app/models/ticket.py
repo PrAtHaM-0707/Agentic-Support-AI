@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from app.db.session import Base
 
+
 class Ticket(Base):
     __tablename__ = "tickets"
 

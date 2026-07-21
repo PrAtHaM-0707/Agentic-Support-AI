@@ -8,6 +8,7 @@ from app.core.security import hash_password, verify_password, create_access_toke
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 @router.post("/signup", response_model=Token)
 def signup(data: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == data.email).first():
@@ -23,6 +24,7 @@ def signup(data: UserCreate, db: Session = Depends(get_db)):
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token}
+
 
 @router.post("/login", response_model=Token)
 def login(data: UserLogin, db: Session = Depends(get_db)):

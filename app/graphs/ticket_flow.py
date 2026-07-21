@@ -1,12 +1,16 @@
 from langgraph.graph import StateGraph, END
-from typing import TypedDict, List, Dict
+from typing import TypedDict
 import json
 from app.agents.analyzer import analyze_ticket
 from app.agents.decision import decide_action
 from app.agents.responder import generate_response, generate_with_tools
 from app.agents.planner import plan_resolution, should_use_tools
 from app.agents.retriever import retrieve_context
-from app.agents.supervisor import supervise_workflow, validate_and_reflect, should_escalate
+from app.agents.supervisor import (
+    supervise_workflow,
+    validate_and_reflect,
+    should_escalate,
+)
 from app.core.evaluation import evaluate_response_quality, check_guardrails
 
 
@@ -31,7 +35,7 @@ def analyzer_node(state: TicketState):
     analysis_str = analyze_ticket(state["content"], use_rag=True)
     try:
         analysis = json.loads(analysis_str)
-    except:
+    except Exception:
         analysis = {"category": "other", "error": "analysis parse failed"}
     return {"analysis": analysis, "iteration_count": state.get("iteration_count", 0)}
 
@@ -45,9 +49,7 @@ def planning_node(state: TicketState):
 def supervisor_node(state: TicketState):
     """Supervisor decides initial workflow"""
     decision = supervise_workflow(
-        state["content"],
-        state["analysis"],
-        state.get("plan")
+        state["content"], state["analysis"], state.get("plan")
     )
     return {"supervisor_decision": decision}
 
@@ -61,9 +63,7 @@ def retrieval_node(state: TicketState):
 def decision_node(state: TicketState):
     """Decide action: escalate / use tools / auto-resolve"""
     escalation = should_escalate(
-        state["content"],
-        state["analysis"],
-        state.get("iteration_count", 0)
+        state["content"], state["analysis"], state.get("iteration_count", 0)
     )
 
     if escalation.get("should_escalate"):
@@ -77,7 +77,7 @@ def decision_node(state: TicketState):
     try:
         decision = json.loads(decide_action(state["analysis"]))
         return {"action": decision.get("action", "auto_resolve")}
-    except:
+    except Exception:
         return {"action": "auto_resolve"}
 
 
@@ -87,7 +87,7 @@ def tool_execution_node(state: TicketState):
     return {
         "response": result["response"],
         "tools_used": result["tools_used"],
-        "tool_results": result["tool_results"]
+        "tool_results": result["tool_results"],
     }
 
 
@@ -97,7 +97,7 @@ def responder_node(state: TicketState):
         state["content"],
         state["analysis"],
         state.get("tool_results"),
-        state.get("context")
+        state.get("context"),
     )
     return {"response": response}
 
@@ -105,16 +105,15 @@ def responder_node(state: TicketState):
 def evaluation_node(state: TicketState):
     """Evaluate quality + guardrails"""
     quality = evaluate_response_quality(
-        state["content"],
-        state["response"],
-        state["analysis"]
+        state["content"], state["response"], state["analysis"]
     )
     guardrails = check_guardrails(state["response"], state["content"])
 
     evaluation = {
         "quality": quality,
         "guardrails": guardrails,
-        "overall_pass": quality.get("passes", False) and guardrails.get("passed", False)
+        "overall_pass": quality.get("passes", False)
+        and guardrails.get("passed", False),
     }
     return {"evaluation": evaluation}
 
@@ -122,9 +121,7 @@ def evaluation_node(state: TicketState):
 def reflection_node(state: TicketState):
     """Reflect → decide approve or iterate"""
     reflection = validate_and_reflect(
-        state["content"],
-        state["response"],
-        state["evaluation"]
+        state["content"], state["response"], state["evaluation"]
     )
 
     iteration_count = state.get("iteration_count", 0)
@@ -132,11 +129,11 @@ def reflection_node(state: TicketState):
     if iteration_count >= 2:
         reflection["needs_iteration"] = False
         reflection["reason"] = "Maximum iterations reached (2)"
-        reflection["approve"] = False  
+        reflection["approve"] = False
 
     return {
         "reflection": reflection,
-        "final_decision": "approve" if reflection.get("approve", False) else "iterate"
+        "final_decision": "approve" if reflection.get("approve", False) else "iterate",
     }
 
 
@@ -150,13 +147,10 @@ def iteration_node(state: TicketState):
     analysis_str = analyze_ticket(enhanced_content, use_rag=True)
     try:
         analysis = json.loads(analysis_str)
-    except:
+    except Exception:
         analysis = state["analysis"]  # fallback
 
-    return {
-        "iteration_count": new_count,
-        "analysis": analysis
-    }
+    return {"iteration_count": new_count, "analysis": analysis}
 
 
 graph = StateGraph(TicketState)
@@ -186,7 +180,7 @@ graph.add_conditional_edges(
         "use_tools": "execute_tools",
         "auto_resolve": "respond",
         "escalate": END,
-    }
+    },
 )
 
 graph.add_edge("execute_tools", "evaluate")
@@ -200,7 +194,7 @@ graph.add_conditional_edges(
     {
         "approve": END,
         "iterate": "iterate",
-    }
+    },
 )
 
 graph.add_edge("iterate", "plan")

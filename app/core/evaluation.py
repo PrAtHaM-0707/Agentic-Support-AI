@@ -1,21 +1,19 @@
 """
 Evaluation and guardrails for agent responses
 """
+
 from app.core.llm import client
 from typing import Dict, List
 import json
 import re
 
-def evaluate_response_quality(
-    ticket: str,
-    response: str,
-    analysis: dict
-) -> Dict:
+
+def evaluate_response_quality(ticket: str, response: str, analysis: dict) -> Dict:
     prompt = f"""
 Evaluate this customer support response carefully:
 TICKET: {ticket}
 RESPONSE: {response}
-CATEGORY: {analysis.get('category')}
+CATEGORY: {analysis.get("category")}
 
 Rate each on 1-10:
 - relevance: fully addresses the ticket?
@@ -40,11 +38,14 @@ Return JSON only:
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": "You are a strict quality evaluator. Return only JSON."},
+            {
+                "role": "system",
+                "content": "You are a strict quality evaluator. Return only JSON.",
+            },
             {"role": "user", "content": prompt},
         ],
         temperature=0.0,
-        response_format={"type": "json_object"}
+        response_format={"type": "json_object"},
     )
 
     eval_result = json.loads(completion.choices[0].message.content)
@@ -61,25 +62,43 @@ def check_guardrails(response: str, ticket: str) -> Dict:
     response_lower = response.lower()
 
     prohibited_terms = [
-        "guarantee", "promise", "definitely will", "100%", "for sure",
-        "sue", "legal action", "lawyer", "court", "compensation"
+        "guarantee",
+        "promise",
+        "definitely will",
+        "100%",
+        "for sure",
+        "sue",
+        "legal action",
+        "lawyer",
+        "court",
+        "compensation",
     ]
     for term in prohibited_terms:
         if term in response_lower:
             issues.append(f"Prohibited term: '{term}'")
 
     hallucination_markers = [
-        "failed due to", "insufficient funds", "card declined", "bank issue",
-        "refund failed", "refund unsuccessful", "could not process", "technical issue",
-        "appears that", "it seems", "likely", "probably", "I believe"
+        "failed due to",
+        "insufficient funds",
+        "card declined",
+        "bank issue",
+        "refund failed",
+        "refund unsuccessful",
+        "could not process",
+        "technical issue",
+        "appears that",
+        "it seems",
+        "likely",
+        "probably",
+        "I believe",
     ]
     for marker in hallucination_markers:
         if marker in response_lower:
             issues.append(f"Potential hallucination: '{marker}'")
 
-    if re.search(r'\b\d{3}-\d{2}-\d{4}\b', response):
+    if re.search(r"\b\d{3}-\d{2}-\d{4}\b", response):
         issues.append("Possible SSN pattern")
-    if re.search(r'\b\d{16}\b|\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b', response):
+    if re.search(r"\b\d{16}\b|\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b", response):
         issues.append("Possible credit card pattern")
 
     if len(response) < 40:
@@ -87,14 +106,26 @@ def check_guardrails(response: str, ticket: str) -> Dict:
     if len(response) > 1200:
         issues.append("Response too long")
 
-    empathy_words = ["sorry", "apologize", "understand", "help", "appreciate", "frustrating", "inconvenience"]
+    empathy_words = [
+        "sorry",
+        "apologize",
+        "understand",
+        "help",
+        "appreciate",
+        "frustrating",
+        "inconvenience",
+    ]
     has_empathy = any(word in response_lower for word in empathy_words)
     if not has_empathy and "negative" in str(ticket).lower():
         issues.append("Lacks empathy for negative sentiment")
 
     ai_disclosure = [
-        "as an ai", "i'm not human", "i don't have access", "i cannot access",
-        "as a language model", "according to my training"
+        "as an ai",
+        "i'm not human",
+        "i don't have access",
+        "i cannot access",
+        "as a language model",
+        "according to my training",
     ]
     for phrase in ai_disclosure:
         if phrase in response_lower:
@@ -104,17 +135,24 @@ def check_guardrails(response: str, ticket: str) -> Dict:
         "passed": len(issues) == 0,
         "issues": issues,
         "checks_performed": [
-            "prohibited_terms", "hallucination_markers", "pii_leakage",
-            "length_limits", "empathy_check", "ai_disclosure"
-        ]
+            "prohibited_terms",
+            "hallucination_markers",
+            "pii_leakage",
+            "length_limits",
+            "empathy_check",
+            "ai_disclosure",
+        ],
     }
 
 
 def validate_tool_usage(tool_name: str, arguments: dict) -> Dict:
     issues = []
     valid_tools = [
-        "search_knowledge", "check_payment_status", "create_refund",
-        "escalate_to_human", "check_account_status"
+        "search_knowledge",
+        "check_payment_status",
+        "create_refund",
+        "escalate_to_human",
+        "check_account_status",
     ]
     if tool_name not in valid_tools:
         issues.append(f"Invalid tool: {tool_name}")
@@ -124,7 +162,7 @@ def validate_tool_usage(tool_name: str, arguments: dict) -> Dict:
         "create_refund": ["transaction_id", "reason"],
         "escalate_to_human": ["reason"],
         "check_account_status": ["user_email"],
-        "search_knowledge": ["query"]
+        "search_knowledge": ["query"],
     }
 
     if tool_name in required_params:
@@ -136,10 +174,7 @@ def validate_tool_usage(tool_name: str, arguments: dict) -> Dict:
 
 
 def evaluation(
-    ticket: str,
-    response: str,
-    analysis: dict,
-    tools_used: List[str] = None
+    ticket: str, response: str, analysis: dict, tools_used: List[str] = None
 ) -> Dict:
     quality = evaluate_response_quality(ticket, response, analysis)
     guardrails = check_guardrails(response, ticket)
@@ -151,5 +186,5 @@ def evaluation(
         "quality_metrics": quality,
         "guardrail_checks": guardrails,
         "tools_used": tools_used or [],
-        "recommendation": "approve" if overall_pass else "needs_revision"
+        "recommendation": "approve" if overall_pass else "needs_revision",
     }

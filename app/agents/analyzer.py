@@ -20,29 +20,30 @@ Schema:
 }
 """
 
+
 def analyze_ticket(text: str, use_rag: bool = True) -> dict:
     """
     Analyze ticket with optional RAG context
-    
+
     Args:
         text: Ticket content
         use_rag: Whether to use knowledge base retrieval
-        
+
     Returns:
         JSON string with analysis
     """
-    
+
     context = ""
     if use_rag:
         try:
             context = retrieve_context(text, top_k=2)
-        except:
+        except Exception:
             context = ""
-    
+
     prompt = f"{text}"
     if context:
         prompt = f"Context from knowledge base:\n{context}\n\nTicket:\n{text}"
-    
+
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -50,7 +51,7 @@ def analyze_ticket(text: str, use_rag: bool = True) -> dict:
             {"role": "user", "content": prompt},
         ],
         temperature=0,
-        response_format={"type": "json_object"}
+        response_format={"type": "json_object"},
     )
 
     return completion.choices[0].message.content

@@ -1,8 +1,9 @@
 """
 Supervisor agent for orchestrating multiple agents and workflows
 """
+
 from app.core.llm import client
-from typing import Dict, List
+from typing import Dict
 import json
 
 SYSTEM_PROMPT = """
@@ -27,6 +28,7 @@ Return ONLY valid JSON:
   "confidence": 0.0-1.0
 }
 """
+
 
 def supervise_workflow(ticket: str, analysis: dict, plan: dict = None) -> Dict:
     """
@@ -54,7 +56,7 @@ Be conservative: escalate when uncertain or high risk.
             ],
             temperature=0.0,
             response_format={"type": "json_object"},
-            max_tokens=300
+            max_tokens=300,
         )
         return json.loads(completion.choices[0].message.content)
     except Exception as e:
@@ -62,15 +64,11 @@ Be conservative: escalate when uncertain or high risk.
             "workflow": "human_escalation",
             "reasoning": f"Supervisor failed to decide due to error: {str(e)}",
             "requires_iteration": False,
-            "confidence": 0.0
+            "confidence": 0.0,
         }
 
 
-def validate_and_reflect(
-    original_ticket: str,
-    response: str,
-    evaluation: dict
-) -> Dict:
+def validate_and_reflect(original_ticket: str, response: str, evaluation: dict) -> Dict:
     """
     Reflect on the final response quality and decide next step.
     """
@@ -104,12 +102,15 @@ Return ONLY JSON:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are a strict quality supervisor. Return only JSON."},
+                {
+                    "role": "system",
+                    "content": "You are a strict quality supervisor. Return only JSON.",
+                },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.0,
             response_format={"type": "json_object"},
-            max_tokens=250
+            max_tokens=250,
         )
         result = json.loads(completion.choices[0].message.content)
         if "approve" not in result:
@@ -122,15 +123,11 @@ Return ONLY JSON:
             "needs_iteration": True,
             "reason": "Reflection LLM call failed",
             "suggested_improvements": [],
-            "approve": False
+            "approve": False,
         }
 
 
-def should_escalate(
-    ticket: str,
-    analysis: dict,
-    attempts: int = 0
-) -> Dict:
+def should_escalate(ticket: str, analysis: dict, attempts: int = 0) -> Dict:
     """
     Decide if the ticket should be escalated to human.
     """
@@ -147,7 +144,10 @@ def should_escalate(
 
     ticket_lower = ticket.lower()
     if analysis.get("category") == "billing":
-        if any(word in ticket_lower for word in ["refund", "chargeback", "dispute", "reversal"]):
+        if any(
+            word in ticket_lower
+            for word in ["refund", "chargeback", "dispute", "reversal"]
+        ):
             reasons.append("Explicit refund request detected")
         elif "cancel" in ticket_lower or "subscription" in ticket_lower:
             reasons.append("Subscription/cancellation case — prefer tool or KB")
@@ -156,5 +156,7 @@ def should_escalate(
         "should_escalate": auto_escalate,
         "reason": " | ".join(reasons) if reasons else "No immediate escalation needed",
         "escalation_priority": analysis.get("urgency", "medium"),
-        "suggested_queue": "billing" if analysis.get("category") == "billing" else "general"
+        "suggested_queue": "billing"
+        if analysis.get("category") == "billing"
+        else "general",
     }

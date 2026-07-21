@@ -27,3 +27,8 @@ qdrant-client
 # Utilities
 httpx
 python-multipart
+
+# Dev & Enterprise Tools
+ruff
+pytest
+pytest-asyncio

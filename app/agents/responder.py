@@ -1,6 +1,6 @@
 from app.core.llm import client
 from app.agents.retriever import retrieve_context
-from app.core.tools import execute_tool, get_tool_definitions
+from app.core.tools import execute_tool
 import json
 
 SYSTEM_PROMPT = """\
@@ -18,16 +18,17 @@ Rules you MUST follow:\
 - Match the customer's tone (empathetic for negative sentiment).\
 """
 
+
 def generate_response(
     ticket_text: str,
     analysis: dict = None,
     tool_results: list = None,
-    context: str = None
+    context: str = None,
 ) -> str:
     if context is None:
         try:
             context = retrieve_context(ticket_text, top_k=3)
-        except:
+        except Exception:
             context = ""
 
     prompt_parts = [f"Customer Ticket:\n{ticket_text}"]
@@ -39,9 +40,13 @@ def generate_response(
         prompt_parts.append(f"\nAnalysis:\n{json.dumps(analysis, indent=2)}")
 
     if tool_results:
-        prompt_parts.append(f"\nTool Results (use ONLY this information):\n{json.dumps(tool_results, indent=2)}")
+        prompt_parts.append(
+            f"\nTool Results (use ONLY this information):\n{json.dumps(tool_results, indent=2)}"
+        )
     else:
-        prompt_parts.append("\nNo tools were used. Base your answer only on the ticket and knowledge base.")
+        prompt_parts.append(
+            "\nNo tools were used. Base your answer only on the ticket and knowledge base."
+        )
 
     prompt = "\n".join(prompt_parts)
 
@@ -51,7 +56,7 @@ def generate_response(
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ],
-        temperature=0.45,           
+        temperature=0.45,
         max_tokens=350,
     )
     return completion.choices[0].message.content.strip()
@@ -82,11 +87,14 @@ Only include tools that are clearly necessary based on the ticket.
     tool_decision = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": "You are a careful tool selector. Return only valid JSON."},
+            {
+                "role": "system",
+                "content": "You are a careful tool selector. Return only valid JSON.",
+            },
             {"role": "user", "content": tools_prompt},
         ],
         temperature=0.0,
-        response_format={"type": "json_object"}
+        response_format={"type": "json_object"},
     )
 
     decision = json.loads(tool_decision.choices[0].message.content)
@@ -97,15 +105,12 @@ Only include tools that are clearly necessary based on the ticket.
             tool_name = tool_call.get("tool")
             args = tool_call.get("args", {})
             result = execute_tool(tool_name, args)
-            tool_results.append({
-                "tool": tool_name,
-                "result": result
-            })
+            tool_results.append({"tool": tool_name, "result": result})
 
     response = generate_response(ticket_text, analysis, tool_results)
 
     return {
         "response": response,
         "tools_used": [t["tool"] for t in tool_results],
-        "tool_results": tool_results
+        "tool_results": tool_results,
     }

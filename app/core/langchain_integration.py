@@ -3,14 +3,13 @@ LangChain integration for conversation memory and chains
 """
 
 from typing import Dict, List
-import os
 
 
 class TicketMemoryManager:
     """Manage conversation history for tickets using simple in-memory storage"""
 
     def __init__(self):
-        self.memories = {}  
+        self.memories = {}
 
     def get_memory(self, ticket_id: int) -> List[Dict]:
         """Get or create memory for a ticket"""
@@ -21,16 +20,8 @@ class TicketMemoryManager:
     def add_exchange(self, ticket_id: int, user_message: str, ai_response: str):
         """Add a conversation exchange to memory"""
         memory = self.get_memory(ticket_id)
-        memory.append({
-            "role": "user",
-            "content": user_message,
-            "timestamp": None 
-        })
-        memory.append({
-            "role": "assistant",
-            "content": ai_response,
-            "timestamp": None
-        })
+        memory.append({"role": "user", "content": user_message, "timestamp": None})
+        memory.append({"role": "assistant", "content": ai_response, "timestamp": None})
 
     def get_history(self, ticket_id: int) -> List[Dict]:
         """Get conversation history for a ticket"""
@@ -72,19 +63,16 @@ def get_conversation_context(ticket_id: int) -> str:
 
 
 def create_contextual_response(
-    ticket_id: int,
-    user_input: str,
-    kb_context: str = ""
+    ticket_id: int, user_input: str, kb_context: str = ""
 ) -> str:
     """
     Create response with conversation memory
 
     This uses our custom memory manager instead of LangChain
     """
-   
+
     conversation_context = get_conversation_context(ticket_id)
 
-    
     context = f"Knowledge Base Context:\n{kb_context}" if kb_context else ""
 
     prompt = f"""
@@ -105,9 +93,9 @@ Agent:"""
         model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": "You are a helpful customer support agent."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
-        temperature=0.7
+        temperature=0.7,
     )
 
     response = completion.choices[0].message.content
