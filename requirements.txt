@@ -2,11 +2,13 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic[email]
 python-dotenv
 
 # Auth & Security
 python-jose
-passlib[bcrypt]
+passlib
+bcrypt==3.2.2
 
 # Database
 sqlalchemy
