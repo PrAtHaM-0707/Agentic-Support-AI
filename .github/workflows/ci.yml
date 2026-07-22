@@ -35,7 +35,9 @@ jobs:
 
       - name: Run Pytest
         env:
-          # Dummy secret for testing
+          # Dummy secrets for testing in CI without a .env file
           JWT_SECRET_KEY: super-secret-test-key-for-testing
+          DATABASE_URL: sqlite:///./test.db
+          GROQ_API_KEY: dummy-api-key-for-testing
         run: |
           pytest -v
