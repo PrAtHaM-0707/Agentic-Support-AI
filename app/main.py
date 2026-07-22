@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 from app.api.auth import router as auth_router
 from app.api.tickets import router as ticket_router
 from app.core.init_kb import initialize_knowledge_base
@@ -50,8 +53,16 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(ticket_router)
 
+# Mount static files directory
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
+async def serve_frontend():
+    return FileResponse("static/index.html")
+
+
+@app.get("/health")
 def health():
     return {
         "status": "ok",

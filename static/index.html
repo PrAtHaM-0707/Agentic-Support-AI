@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Support Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h1>Agentic Support AI</h1>
+            </div>
+            <div class="status-badge">
+                <span class="pulse"></span>
+                System Online
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <section class="chat-section glass-panel">
+                <div class="chat-header">
+                    <h2>Submit a Support Request</h2>
+                    <p>Describe your issue, and our autonomous AI will orchestrate a solution.</p>
+                </div>
+
+                <div class="input-container">
+                    <textarea id="prompt-input" placeholder="E.g., I was charged twice for my last subscription, can you refund me?"></textarea>
+                    <button id="submit-btn" class="primary-btn">
+                        <span>Execute</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="loading-state" class="hidden">
+                    <div class="spinner"></div>
+                    <p id="loading-text">Orchestrating agents...</p>
+                </div>
+            </section>
+
+            <section id="results-section" class="results-section hidden">
+                <div class="glass-panel response-panel">
+                    <h3>AI Resolution</h3>
+                    <div id="ai-response" class="content-block"></div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="glass-panel metric-card">
+                        <h4>Category</h4>
+                        <div id="metric-category" class="metric-value">--</div>
+                    </div>
+                    <div class="glass-panel metric-card">
+                        <h4>Priority</h4>
+                        <div id="metric-priority" class="metric-value">--</div>
+                    </div>
+                    <div class="glass-panel metric-card">
+                        <h4>Sentiment</h4>
+                        <div id="metric-sentiment" class="metric-value">--</div>
+                    </div>
+                    <div class="glass-panel metric-card">
+                        <h4>AI Confidence</h4>
+                        <div class="metric-value"><span id="metric-confidence">--</span>%</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel telemetry-panel">
+                    <h3>Agentic Telemetry</h3>
+                    <div class="telemetry-content">
+                        <div class="telemetry-item">
+                            <span class="label">Plan Complexity:</span>
+                            <span id="telemetry-complexity" class="value">--</span>
+                        </div>
+                        <div class="telemetry-item">
+                            <span class="label">Tools Utilized:</span>
+                            <span id="telemetry-tools" class="value">--</span>
+                        </div>
+                        <div class="telemetry-item">
+                            <span class="label">Guardrails:</span>
+                            <span id="telemetry-guardrails" class="value">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
