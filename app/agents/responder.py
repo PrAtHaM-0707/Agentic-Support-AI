@@ -1,6 +1,7 @@
 from app.core.llm import client
 from app.agents.retriever import retrieve_context
 from app.core.tools import execute_tool
+from app.core.logger import app_logger
 import json
 
 SYSTEM_PROMPT = """\
@@ -50,6 +51,8 @@ def generate_response(
 
     prompt = "\n".join(prompt_parts)
 
+    app_logger.info("\n" + "-"*40 + "\n[LLM Request] Raw Prompt:\n" + prompt + "\n" + "-"*40)
+
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -59,7 +62,11 @@ def generate_response(
         temperature=0.45,
         max_tokens=350,
     )
-    return completion.choices[0].message.content.strip()
+    
+    response_text = completion.choices[0].message.content.strip()
+    app_logger.info("\n" + "-"*40 + "\n[LLM Response] Raw Output:\n" + response_text + "\n" + "-"*40)
+    
+    return response_text
 
 
 def generate_with_tools(ticket_text: str, analysis: dict) -> dict:

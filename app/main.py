@@ -9,6 +9,7 @@ from app.core.init_kb import initialize_knowledge_base
 from contextlib import asynccontextmanager
 from app.core.logger import app_logger
 from app.db.session import engine, Base
+import threading
 
 
 @asynccontextmanager
@@ -22,6 +23,11 @@ async def lifespan(app: FastAPI):
     # Initialize knowledge base with support documents
     app_logger.info("📚 Initializing knowledge base...")
     initialize_knowledge_base()
+
+    # Preload ML model to prevent cold-starts on first request
+    app_logger.info("🧠 Spawning background thread to warmup AI Model...")
+    from app.core.qdrant_client import get_encoder
+    threading.Thread(target=get_encoder, daemon=True).start()
 
     app_logger.info("✅ System ready!")
     yield

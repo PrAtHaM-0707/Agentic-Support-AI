@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
+import time
 
 from app.db.deps import get_db
 from app.models.ticket import Ticket
@@ -63,7 +64,16 @@ async def create_ticket(
 
     background_tasks.add_task(process_ticket_async, ticket.id, data.content, db)
 
+    app_logger.info(f"\n{'='*50}\n🎫 NEW TICKET RECEIVED\n{'='*50}")
+    app_logger.info(f"Prompt: '{data.content}'")
+    app_logger.info("Starting Agentic Workflow...")
+    
+    start_time = time.time()
     result = ticket_graph.invoke({"content": data.content})
+    end_time = time.time()
+    
+    processing_time = round(end_time - start_time, 2)
+    app_logger.info(f"\n{'='*50}\n✅ WORKFLOW COMPLETED IN {processing_time}s\n{'='*50}\n")
 
     analysis = result.get("analysis", {})
     action = result.get("action")
