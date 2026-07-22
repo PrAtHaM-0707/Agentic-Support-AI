@@ -57,6 +57,7 @@ app.include_router(ticket_router)
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.get("/")
 async def serve_frontend():
     return FileResponse("static/index.html")
