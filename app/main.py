@@ -8,12 +8,16 @@ from app.api.tickets import router as ticket_router
 from app.core.init_kb import initialize_knowledge_base
 from contextlib import asynccontextmanager
 from app.core.logger import app_logger
+from app.db.session import engine, Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup"""
     app_logger.info("🚀 Starting Agentic Support AI...")
+
+    app_logger.info("🗄️ Initializing database tables...")
+    Base.metadata.create_all(bind=engine)
 
     # Initialize knowledge base with support documents
     app_logger.info("📚 Initializing knowledge base...")

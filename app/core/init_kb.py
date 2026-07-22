@@ -75,6 +75,13 @@ def initialize_knowledge_base():
     app_logger.info("Initializing knowledge base...")
 
     try:
+        stats = get_collection_stats()
+        
+        # Skip initialization if documents already exist
+        if stats.get('total_documents', 0) > 0:
+            app_logger.info(f"Knowledge base already initialized with {stats['total_documents']} documents. Skipping...")
+            return True
+
         count = add_documents(SUPPORT_DOCUMENTS)
         stats = get_collection_stats()
 

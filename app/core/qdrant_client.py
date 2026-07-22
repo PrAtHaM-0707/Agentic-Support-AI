@@ -18,7 +18,15 @@ else:
     client = QdrantClient(":memory:")  # ":memory:" for local testing
 
 
-encoder = SentenceTransformer("all-MiniLM-L6-v2")
+encoder = None
+
+def get_encoder():
+    global encoder
+    if encoder is None:
+        from sentence_transformers import SentenceTransformer
+        encoder = SentenceTransformer("all-MiniLM-L6-v2")
+    return encoder
+
 
 COLLECTION_NAME = "knowledge_base"
 VECTOR_SIZE = 384
@@ -52,7 +60,8 @@ def add_documents(documents: List[Dict[str, str]]):
         text = doc.get("text", "")
         metadata = doc.get("metadata", {})
 
-        vector = encoder.encode(text).tolist()
+        encoder_model = get_encoder()
+        vector = encoder_model.encode(text).tolist()
 
         point = PointStruct(
             id=str(uuid.uuid4()), vector=vector, payload={"text": text, **metadata}
@@ -76,7 +85,8 @@ def search_knowledge_base(query: str, limit: int = 3) -> List[Dict]:
     """
     init_collection()
 
-    query_vector = encoder.encode(query).tolist()
+    encoder_model = get_encoder()
+    query_vector = encoder_model.encode(query).tolist()
 
     search_result = client.query_points(
         collection_name=COLLECTION_NAME,

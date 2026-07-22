@@ -72,6 +72,9 @@ async def create_ticket(
     tools_used = result.get("tools_used", [])
     evaluation = result.get("evaluation", {})
 
+    if not response and action == "escalate":
+        response = "Your request has been escalated to a human agent for immediate assistance."
+
     ticket.category = analysis.get("category")
     ticket.priority = analysis.get("urgency")
     ticket.sentiment = analysis.get("sentiment")
